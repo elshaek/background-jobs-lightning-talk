@@ -1,15 +1,15 @@
 # Background Jobs
 
-## What
+## What is it?
 - refers to (asynchronous) work that is processed outside of the usual request/response workflow 
-- Usual: web applications receive a request from the outside world, do some processing (such as querying a database) and immediately return a response within a few milliseconds
+- Usual: web applications receive a request from the outside world, do some processing and immediately return a response within a few milliseconds
 
 ![diagram-no-bg-service](https://s3.amazonaws.com/heroku-devcenter-files/article-images/310-imported-1443570179-Screen-20shot-202012-04-12-20at-204.00.09-20PM.png)
 
 - Background jobs: 
     + work that require a longer time to complete than the normal request
-    + these requests cannot be processed immediately and return a response (∴ asynchronous)
-    + In order to not interrupt the normal synchronous workflow of an application, asynchronous tasks are .
+    + these requests cannot be processed immediately and return a response (asynchronous)
+    + In order to not interrupt the normal synchronous workflow of an application, asynchronous tasks run in the background.
 
 ![diagram-bg-service](https://s3.amazonaws.com/heroku-devcenter-files/article-images/310-imported-1443570182-Screen-20shot-202012-04-12-20at-203.59.12-20PM.png)
 
@@ -29,6 +29,23 @@
 - reduces compounding performance issues that occur when requests become backlogged
 - they transfer both time and computationally intensive tasks from the web layer to a background process outside the user request/response lifecycle
 - ∴ helps in building scalable web apps
+
+
+## Common use case: Sending Emails
+We've created an application that sends an email to customers when an order was fulfilled.
+
+No background jobs ('inline'):
+- as soon as an action triggers an email, that action (successfully sending an email) cannot be completed until that email has been sent. This could work, but could become problematic if/when:
+  - the email server goes down and emails cannot go out
+  - the user's email service goes down and cannot receive emails at that time
+  - the customer's inbox is 'full' and will not accept any more emails
+
+The above mentioned scenarios would cause a 'block' in the system. A long request can also cause capacity issues for application servers, delaying response times for requests from other users which leads to cascading failure.
+
+All of these potential failures are something that a production application must be designed to handle. They also all mean that your application would 'block' instead of returning an immediate response to the user. This is not ideal as users do not like waiting minutes or even seconds for an unresponsive application. 
+
+With background jobs:
+Background jobs are a common way to alleviate this problem. When an action triggers the email, the application creates a job that contains all of the relevant information required such as the recipient, body, subject, etc. It could queue several of these jobs back to back before they are actually processed. This is allowed because the processing of these jobs occur on a 'background thread' and do not affect the normal synchronous workflow of your application.
 
 
 ## Notes
